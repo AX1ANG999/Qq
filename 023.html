@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>我的轉系物語</title>
+    <style>
+        @font-face {
+            font-family: 'Unifont JP';
+            src: url('unifont_jp-16.0.02.otf') format('opentype');
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000000;
+            font-family: 'Unifont JP', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #title {
+            position: absolute;
+            top: 20vh;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Unifont JP', sans-serif;
+            font-size: 10vh;
+            color: #5B5B00;
+            cursor: pointer;
+        }
+        .particle {
+            position: absolute;
+            background-color: #808080;
+            opacity: 0.8;
+            animation: scatter 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        @keyframes scatter {
+            0% { opacity: 0.8; }
+            100% { opacity: 0; transform: translateY(100px) translateX(150px); }
+        }
+        .smoke {
+            position: absolute;
+            background-color: #808080;
+            opacity: 0.5;
+            border-radius: 50%;
+            animation: smokeRise 1.5s ease-out forwards;
+        }
+        @keyframes smokeRise {
+            0% { opacity: 0.5; }
+            100% { opacity: 0; transform: translateY(-75px) scale(2); }
+        }
+        #dialogueBox {
+            position: absolute;
+            bottom: 5vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90vw;
+            max-width: 600px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 4px solid #5B5B00;
+            box-shadow: 0 0 0 2px #000;
+            display: none;
+            font-family: 'Unifont JP', sans-serif;
+            font-size: 24px;
+            min-height: 150px;
+            max-height: 150px;
+            white-space: pre-wrap;
+            overflow: auto;
+        }
+        #dialogueText {
+            color: #5B5B00;
+            margin: 0 0 10px 0;
+            text-align: left;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        #continueBtn, #replayBtn, #nextChapterBtn, #backToTitleBtn {
+            padding: 8px 16px;
+            margin: 5px;
+            background-color: #5B5B00;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-family: 'Unifont JP', sans-serif;
+            font-size: 20px;
+            display: inline-block;
+        }
+        #continueBtn, #replayBtn, #nextChapterBtn, #backToTitleBtn { display: none; }
+        #character {
+            position: absolute;
+            top: 25vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50vh;
+            height: 50vh;
+            background-size: cover;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="title">我的轉系物語</div>
+    <div id="dialogueBox">
+        <p id="dialogueText"></p>
+        <div class="button-container">
+            <button id="continueBtn" onclick="nextDialogue()">繼續</button>
+            <button id="replayBtn" onclick="replayChapter()">再看一次</button>
+            <button id="nextChapterBtn" onclick="nextChapter()">未來展望</button>
+            <button id="backToTitleBtn" onclick="backToTitle()">回到標題</button>
+        </div>
+    </div>
+    <div id="character"></div>
+    <audio id="typeSound" src="blip.wav"></audio>
+    <audio id="dropProcessSound" src="boom_sine_tenor.mp3"></audio>
+    <audio id="dropSound" src="435695__samsterbirdies__big-boom.OGG"></audio>
+    <audio id="buttonSound" src="https://www.myinstants.com/media/sounds/beep.mp3"></audio>
+    <audio id="bgm" src="Hopes And Dreams.mp3" loop></audio>
+
+    <script>
+        const chapters = {
+            intro: [
+                "我是黃靖翔，肄業於松山工農化工科，現在是化材系大一的學生。",
+                "我從小就很有意識的活著，高中肄業是因為我覺得學校的學習效率不高，當時就在半工半讀下忙碌的結束高中生活。",
+                "我的家庭組成是由我、大一歲的姐姐、媽媽所組成，家庭的經濟狀況不算太健康。但家庭的氣氛是很不錯的，家人們也支持我好好唸書。",
+                "我的興趣是分析世界還有玩劍玉。",
+                "具體來說，我很常對『某個問題』有止不住的好奇心。",
+                "這個問題出現的很隨機，領域可能是經濟、歷史、音樂、哲學。",
+                "舉個例子，我認為『愚蠢的命令』的本質是很多人的綜合意見導致生下一個畸形的決策，然後延伸出了『研究二戰時的德國』的想法。從德國舉辦奧運洗刷一戰的恥辱，一個月後一戰開打，變異到對猶太人大屠殺，我很好奇這過程是怎麼發展的。",
+                "我還有研究虛擬貨幣的興趣，從2024年5月考完統測去當保全開始的，本來只是想發橫財，但意外培養出世界經濟觀，也是推動我決定轉系的原因之一。",
+                "前面有提到『有意識的活著』也能說是『對自身理解透徹』我高中時從網路接觸哲學至今，讀了不少相關資料，也跟自己討論了許多大哉問，對自己的邏輯非常有自信。順帶一提，最近在看的書是『有限遊戲與無限遊戲』。",
+                "我最喜歡的興趣是聽歌，喜歡到買了DJ盤自己練習自己放歌跟學著做音樂。基本上所有曲風我都能說出我最喜歡的某一首歌，古典或嘻哈或小眾電子的音樂都有涉略。",
+                "我會說我很不容易，家境貧寒可以讓我放棄學業，也能讓我沒有夢想，但我想透過自己的腦子把家裡的『癌症（貧窮）』治好，媽媽的教育程度只有高中、姐姐國中結業。我的價值觀、社會經驗、興趣，大部分是透過自己去摸索、培養出來的。我也說不清楚為什麼，莫名的很貪心，想知道很多事。"
+            ],
+            motivation: [
+                "2025一月，我在網路上分享自己all pass的成績截圖，有位玩劍玉的前輩有追蹤我，知道我唸化學後的第一句話就是『我勸你轉資電類』。",
+                "這位前輩今年28歲，清華大學碩畢，現在任職於美光。這位前輩跟我分享他大學、碩士一路唸化學到出社會，他同儕們的發展、待遇。在網路上聊了一個晚上，我感覺『化材不是我想走的路』，就種下了我想轉系的種子。",
+                "持續2個月的情報搜集，決定好之前最苦惱的就是『好想要精通這四個領域的人告訴我該怎麼做』。在資工、資管、大電、小電之間猶豫，『還是別轉系了先乖乖唸、慢慢想』的想法也一直出現。獲得的資訊越多，越搞不懂哪條路才是我想要的。",
+                "在今年三月，我打給把我教上雲科的恩師，他是教化工的補習班老師，我都叫他義父或爸（單方面）。我是很倔強的小鬼，但我很尊重這個人，不止教學的能力，價值觀、做人處事也是。",
+                "『可以，我支持』聽到這句強心針我就確定了，煩惱2個月的大石頭終於放下，隨支持而來的是數不清的叮嚀和注意事項，但我清楚我被壓力逼急會有怎樣的學習能力，所以我對這個很有把握。",
+                "就這樣，從一月到三月的苦思冥想終於告一個段落。"
+            ],
+            future: [
+                "把鏡頭拉遠。黃靖翔現在站在2025年4月的時間點，剛剛決定要轉系，心裡有點像站在一個新遊戲的起點，按下開始鍵的那一刻。",
+                "未來對我來說是什麼？老實說，我也不知道具體長什麼樣子。想知道很多事，但也明白不可能一次把所有答案拿到手。",
+                "我有個模糊的畫面，大概五、六年後吧，我希望自己能在資訊工程領域找到一個立足點。可能是寫程式、研究數據，又或者成為區塊鏈工程師。",
+                "『五年後的我會是什麼樣子？』這個問題在我腦子裡轉了好幾圈。『是想成為像那位美光前輩一樣的人嗎？還是想走自己的路？』我挺倔強的，可能會選後者，但又怕自己太天真，撞得頭破血流。",
+                "說到撞牆，我不怕壓力逼我，因為我知道自己被逼急了反而會🈶奇效。像是決定轉系那兩個月，或者準備統測的那段時光。壓力大到睡不好，但最後還是理出了頭緒。未來要是也這樣，我應該能扛得住吧？不過我也在想，『扛得住跟過得好是兩回事』，這點得好好琢磨。",
+                "還有家庭。媽媽跟姐姐現在過得不容易。五年後，我希望能讓她們不用再為錢煩惱。不是說要大富大貴，而是那種『夠用就好、安心就好』的生活。這目標聽起來很普通，但我知道有多難。",
+                "興趣也會跟著我走吧。分析世界這件事我停不下來。順便繼續玩音樂，說不定這幾年內就搞出一首自己滿意的歌，丟到網路上，看看有沒有人喜歡。",
+                "最近看的『有限遊戲與無限遊戲』，裡面說有限遊戲有終點，無限遊戲追求延續。我覺得未來對我來說是無限遊戲，沒有什麼『到了就結束』的點。我很好奇，自己能把這個遊戲玩到什麼程度，能不能玩出點名堂。",
+                "總之，未來是個大問號，但我喜歡這種不確定感。就像聽一首沒聽過的歌，下一秒可能是顱內高潮，也可能還在醞釀爆炸，但我就是想按下播放。對我來說，活著就是這樣，邊走邊看，邊想邊做。"
+            ]
+        };
+        const expressions = {
+            intro: ["normal", "think", "happy", "happy", "happy", "think", "confused", "happy", "determined", "happy", "determined"],
+            motivation: ["confused", "think", "confused", "happy", "determined", "happy"],
+            future: ["normal", "think", "happy", "confused", "determined", "think", "happy", "determined", "happy"]
+        };
+
+        let currentChapter = "intro";
+        let currentDialogue = 0;
+        let index = 0;
+        const dialogueText = document.getElementById("dialogueText");
+        const continueBtn = document.getElementById("continueBtn");
+        const replayBtn = document.getElementById("replayBtn");
+        const nextChapterBtn = document.getElementById("nextChapterBtn");
+        const backToTitleBtn = document.getElementById("backToTitleBtn");
+        const dialogueBox = document.getElementById("dialogueBox");
+        const character = document.getElementById("character");
+        const title = document.getElementById("title");
+        const typeSound = document.getElementById("typeSound");
+        const dropProcessSound = document.getElementById("dropProcessSound");
+        const dropSound = document.getElementById("dropSound");
+        const buttonSound = document.getElementById("buttonSound");
+        const bgm = document.getElementById("bgm");
+
+        typeSound.volume = 0.75;
+
+        document.body.addEventListener("click", startDialogue, { once: true });
+
+        function createParticles() {
+            const rect = title.getBoundingClientRect();
+            const particleCount = 60;
+            const smokeCount = 50;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement("div");
+                particle.className = "particle";
+                const size = Math.random() * 5 + 3;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${rect.left + rect.width / 2 - size / 2}px`;
+                particle.style.top = `${rect.top + rect.height / 2}px`; // 從標題中心散開
+                particle.style.backgroundColor = i < particleCount * 0.4 ? "#808080" : (i < particleCount * 0.7 ? "#3d3d3d" : (i < particleCount * 0.9 ? "#5B5B00" : "#FFFFFF"));
+                document.body.appendChild(particle);
+                particle.style.animation = `scatter ${Math.random() * 0.5 + 1}s cubic-bezier(0.4, 0, 0.2, 1) forwards`;
+                particle.style.transform = `translate(${Math.random() * 300 - 150}px, ${Math.random() * 200 - 100}px)`; // 更大範圍
+                setTimeout(() => particle.remove(), 1500);
+            }
+            for (let i = 0; i < smokeCount; i++) {
+                const smoke = document.createElement("div");
+                smoke.className = "smoke";
+                const size = Math.random() * 20 + 10;
+                smoke.style.width = `${size}px`;
+                smoke.style.height = `${size}px`;
+                smoke.style.left = `${rect.left + rect.width / 2 - size / 2 + (Math.random() * 60 - 30)}px`;
+                smoke.style.top = `${rect.top + rect.height / 2}px`; // 從標題中心散開
+                smoke.style.backgroundColor = i % 4 === 0 ? "#808080" : (i % 4 === 1 ? "#A9A9A9" : (i % 4 === 2 ? "#696969" : "#D3D3D3"));
+                document.body.appendChild(smoke);
+                smoke.style.animation = `smokeRise ${Math.random() * 1.5 + 1}s ease-out forwards`;
+                setTimeout(() => smoke.remove(), 2500);
+            }
+        }
+
+        function startDialogue() {
+            dropProcessSound.play(); // 點擊時播放下降音效
+            createParticles(); // 觸發粒子和煙霧特效
+            setTimeout(() => {
+                title.style.display = "none"; // 特效結束後隱藏標題
+                dialogueBox.style.display = "block";
+                character.style.display = "block";
+                bgm.play();
+                typeDialogue();
+            }, 1500); // 等待特效完成
+        }
+
+        function typeDialogue() {
+            if (currentDialogue >= chapters[currentChapter].length) return;
+            dialogueText.textContent = "";
+            index = 0;
+            continueBtn.style.display = "none";
+            replayBtn.style.display = "none";
+            nextChapterBtn.style.display = "none";
+            backToTitleBtn.style.display = "none";
+            typeNextChar();
+        }
+
+        function typeNextChar() {
+            if (index < chapters[currentChapter][currentDialogue].length) {
+                dialogueText.textContent += chapters[currentChapter][currentDialogue][index];
+                typeSound.play();
+                character.style.backgroundImage = Math.random() > 0.5 ? 
+                    `url('${expressions[currentChapter][currentDialogue]}_say.png')` : 
+                    `url('${expressions[currentChapter][currentDialogue]}.png')`;
+                index++;
+                setTimeout(typeNextChar, 33);
+            } else {
+                character.style.backgroundImage = `url('${expressions[currentChapter][currentDialogue]}.png')`;
+                if (currentDialogue < chapters[currentChapter].length - 1) {
+                    continueBtn.style.display = "inline-block";
+                } else {
+                    replayBtn.style.display = "inline-block";
+                    if (currentChapter === "intro") nextChapterBtn.textContent = "轉系動機";
+                    else if (currentChapter === "motivation") nextChapterBtn.textContent = "未來展望";
+                    else nextChapterBtn.textContent = "";
+                    nextChapterBtn.style.display = currentChapter !== "future" ? "inline-block" : "none";
+                    backToTitleBtn.style.display = currentChapter === "future" ? "inline-block" : "none";
+                }
+            }
+        }
+
+        function nextDialogue() {
+            buttonSound.play();
+            currentDialogue++;
+            if (currentDialogue < chapters[currentChapter].length) {
+                typeDialogue();
+            }
+        }
+
+        function replayChapter() {
+            buttonSound.play();
+            currentDialogue = 0;
+            typeDialogue();
+        }
+
+        function nextChapter() {
+            buttonSound.play();
+            if (currentChapter === "intro") {
+                currentChapter = "motivation";
+                currentDialogue = 0;
+                typeDialogue();
+            } else if (currentChapter === "motivation") {
+                currentChapter = "future";
+                currentDialogue = 0;
+                typeDialogue();
+            }
+        }
+
+        function backToTitle() {
+            buttonSound.play();
+            bgm.pause();
+            bgm.currentTime = 0;
+            currentChapter = "intro";
+            currentDialogue = 0;
+            dialogueBox.style.display = "none";
+            character.style.display = "none";
+            title.style.display = "block";
+            document.body.addEventListener("click", startDialogue, { once: true });
+        }
+    </script>
+</body>
+</html>
